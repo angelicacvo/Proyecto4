@@ -2,8 +2,18 @@
   "$schema": "http://json.schemastore.org/tsconfig",
   "extends": "@loopback/build/config/tsconfig.common.json",
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "experimentalDecorators": true,
     "outDir": "dist",
     "rootDir": "src"
+<<<<<<< HEAD
 },
   "include": ["src"]
+=======
+  },
+  "include": [
+    "src",
+    "src/controllers/.ts"
+  ]
+>>>>>>> origin/laura-branch
 }

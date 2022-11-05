@@ -1,12 +1,14 @@
 import {HttpErrors} from '@loopback/rest';
 import {Cliente} from './../entities/cliente.entity';
+import { vehiculos } from '../entities/vehiculo.entity';
+import {Usuarios} from '../models';
 
 export class Validations {
   constructor() {}
 
   // validar campos de usuario
-  public validarCamposCliente(data: Omit<Cliente, 'id'>): void {
-    const {nombres, apellidos, cedula, correo, telefono, ciudadResidencia} =
+  public validarCamposCliente(data: Cliente|Usuarios): void {
+    const {nombres, apellidos, cedula, correo, telefono, ciudadResidencia,} =
       data;
 
     if (!nombres || !nombres.match(/^[a-z]+(\s[a-z]+){0,1}$/gi))
@@ -35,5 +37,13 @@ export class Validations {
 
     if (!ciudadResidencia || !ciudadResidencia.match(/^[a-z]+(\s[a-z]+){0,}/gi))
       throw new HttpErrors[400]('La ciudad ingresada no es válida');
-  }
+    }
+
+    //Validar campos vehiculo
+    public validarCamposVehiculo(data: Omit <vehiculos,'id'>): void {
+      const{placa,marca,tipoVehiculo,anio,modelo,capacidadPasajeros,cilindraje,paisOrigen,descripcion,}
+      =data;
+
+    }
+
 }

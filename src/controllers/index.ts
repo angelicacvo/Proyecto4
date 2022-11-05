@@ -4,3 +4,6 @@ export * from './sedes-usuarios.controller';
 export * from './usuarios-revisiones.controller';
 export * from './usuarios-vehiculos.controller';
 export * from './vehiculos-revisiones.controller';
+export * from './sede.controller';
+export * from './vehiculos.controller';
+export * from './usuarios.controller';

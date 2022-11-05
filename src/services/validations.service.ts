@@ -1,3 +1,4 @@
+import { Mecanico } from './../entities/mecanico.entity';
 import {HttpErrors} from '@loopback/rest';
 import {Cliente} from './../entities/cliente.entity';
 
@@ -5,8 +6,8 @@ export class Validations {
   constructor() {}
 
   // validar campos de usuario
-  public validarCamposCliente(data: Omit<Cliente, 'id'>): void {
-    const {nombres, apellidos, cedula, correo, telefono, ciudadResidencia} =
+  public validarCamposCliente(data: any): void {
+    const {nombres, apellidos, cedula, correo, telefono} =
       data;
 
     if (!nombres || !nombres.match(/^[a-z]+(\s[a-z]+){0,1}$/gi))
@@ -33,7 +34,5 @@ export class Validations {
     if (!telefono || !telefono.match(/^[0-9]{10}/gi))
       throw new HttpErrors[400]('El teléfono ingresado no es válido');
 
-    if (!ciudadResidencia || !ciudadResidencia.match(/^[a-z]+(\s[a-z]+){0,}/gi))
-      throw new HttpErrors[400]('La ciudad ingresada no es válida');
   }
 }

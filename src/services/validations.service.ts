@@ -51,4 +51,8 @@ export class Validations {
         if (!placa || !placa.match(/^[A-Z]{3}[0-9]{3}$/g))
             throw new HttpErrors[400]('Formato de placa invalido debe cumplir con el formato MAYUZCULAS Y 3 numeros');
     }
+
+    public validarbusquedaGeneral(placa: string): void {
+        if (!placa || !placa.match(/^[A-Z]{3}[0-9]{3}$/g)) throw new HttpErrors[400]('Formato de placa invalido debe ');
+    }
 }

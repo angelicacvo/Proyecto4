@@ -1,8 +1,8 @@
-export class Vehiculo {
+export class vehiculo {
     constructor(
-        public id: string,
-        public placa: string,
+        public id: string | any,
         public tipoVehiculo: string,
+        public marca: string,
         public anio: string,
         public modelo: string,
         public capacidadPasajeros: string,

@@ -2,10 +2,17 @@ import { repository } from '@loopback/repository';
 import { get, getModelSchemaRef, HttpErrors, param, post, requestBody, response } from '@loopback/rest';
 import { Usuarios } from './../models/usuarios.model';
 import { Vehiculos } from './../models/vehiculos.model';
+
 import { SedesRepository } from './../repositories/sedes.repository';
 import { UsuariosRepository } from './../repositories/usuarios.repository';
 import { VehiculosRepository } from './../repositories/vehiculos.repository';
 import { Validations } from './../services/validations.service';
+
+interface infoVehiculoGeneral {
+    tipoVehiculo: string | any;
+    marca: string | any;
+    descripcion: string | any;
+}
 
 export class JefeController {
     protected validations: Validations;
@@ -105,5 +112,19 @@ export class JefeController {
     async busquedaDetallada(@param.path.string('placa') placa: typeof Vehiculos.prototype.placa) {
         this.validations.validarBusquedaDetallada(placa);
         return this.VehiculosRepository.findOne({ where: { placa: placa } });
+    }
+
+    /**El jefe de operaciones consulta los datos detallados de un vehiculo */
+    @get('/jefe/busquedaGeneralVehiculo/{placa}')
+    async busquedaGeneral(@param.path.string('placa') placa: string) {
+        this.validations.validarbusquedaGeneral(placa);
+        const veh = await this.VehiculosRepository.findOne({ where: { placa: placa } });
+        if (!veh) throw new HttpErrors[400]('Vehiculo no existe');
+        const data: infoVehiculoGeneral = {
+            tipoVehiculo: veh?.tipoVehiculo,
+            marca: veh?.marca,
+            descripcion: veh?.descripcion,
+        };
+        return data;
     }
 }

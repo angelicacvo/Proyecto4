@@ -1,6 +1,6 @@
-import {Entity, model, property, hasMany} from '@loopback/repository';
-import {Vehiculos} from './vehiculos.model';
+import {Entity, hasMany, model, property} from '@loopback/repository';
 import {Revisiones} from './revisiones.model';
+import {Vehiculos} from './vehiculos.model';
 
 @model()
 export class Usuarios extends Entity {
@@ -90,8 +90,8 @@ export class Usuarios extends Entity {
   }
 }
 
-export interface UsuarioRelations {
+export interface UsuariosRelations {
   // describe navigational properties here
 }
 
-export type UsuarioWithRelations = Usuarios & UsuarioRelations;
+export type UsuarioWithRelations = Usuarios & UsuariosRelations;

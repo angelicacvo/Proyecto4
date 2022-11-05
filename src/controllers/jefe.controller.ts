@@ -1,0 +1,102 @@
+import { repository } from '@loopback/repository';
+import { getModelSchemaRef, HttpErrors, post, requestBody, response } from '@loopback/rest';
+import { Usuarios } from './../models/usuarios.model';
+import { Vehiculos } from './../models/vehiculos.model';
+import { SedesRepository } from './../repositories/sedes.repository';
+import { UsuariosRepository } from './../repositories/usuarios.repository';
+import { VehiculosRepository } from './../repositories/vehiculos.repository';
+import { Validations } from './../services/validations.service';
+
+export class JefeController {
+    protected validations: Validations;
+
+    constructor(
+        @repository(UsuariosRepository)
+        public UsuariosRepository: UsuariosRepository,
+        @repository(VehiculosRepository)
+        public VehiculosRepository: VehiculosRepository,
+        @repository(SedesRepository)
+        public SedesRepository: SedesRepository,
+    ) {
+        this.validations = new Validations();
+    }
+
+    /** El jefe de opreacciones agregra un usuario */
+    @post('/jefe/registrar-usuario')
+    @response(200, {
+        description: 'Agregar Propietario de un vehiculo es decir un cliente',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Usuarios, {
+                    exclude: ['sedeId', 'contraseina', 'nivelEstudios', 'direccion', 'revisiones', 'vehiculos'],
+                }),
+            },
+        },
+    })
+    async registrarCliente(
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: getModelSchemaRef(Usuarios, {
+                        title: 'CrearCliente',
+                        exclude: ['id', 'nivelEstudios', 'direccion', 'rol'],
+                    }),
+                },
+            },
+        })
+        usuario: Usuarios,
+    ): Promise<Usuarios> {
+        // Verificar que el usuario no exista
+        const user = await this.UsuariosRepository.findOne({
+            where: { correo: usuario.correo, cedula: usuario.cedula },
+        });
+        if (user) throw new HttpErrors[400]('El usuario que intentas registrar ya existe');
+
+        // verificar que la sede exista
+        const sede = await this.SedesRepository.findOne({ where: { id: usuario.sedeId } });
+        if (!sede) throw new HttpErrors[400]('La sede a la que pertenece el usuario no existe');
+
+        // validar campos del usuario
+        this.validations.validarCamposCliente(usuario);
+        return this.UsuariosRepository.create(usuario);
+    }
+
+    /** Registra un nuevo vehiculo */
+    @post('/jefe/agregar-vehiculo')
+    @response(200, {
+        description: 'Registra un vehiculo',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Vehiculos, {
+                    exclude: ['revisiones'],
+                }),
+            },
+        },
+    })
+    async registarVehiculo(
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: getModelSchemaRef(Vehiculos, {
+                        title: 'CrearVehiculo',
+                        exclude: ['id'],
+                    }),
+                },
+            },
+        })
+        vehiculo: Vehiculos,
+    ): Promise<Vehiculos> {
+        // validar campos del vehiculo
+        this.validations.validarCamposVehiculo(vehiculo);
+
+        // verificar que e vehiculo no esista
+        const carro = await this.VehiculosRepository.findOne({ where: { placa: vehiculo.placa } });
+        if (carro) throw new HttpErrors[400]('El vehiculo ya existe');
+
+        // Verificar que el usuario deño del vehiculo exista
+        const propietario = await this.UsuariosRepository.findOne({ where: { id: vehiculo.usuarioId } });
+        if (!propietario) throw new HttpErrors[400]('El dueño de este vehiculo no está registrado');
+
+        return this.VehiculosRepository.create(vehiculo);
+    }
+}

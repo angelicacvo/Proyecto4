@@ -32,6 +32,15 @@ export class Revisiones extends Entity {
   })
   horaSalida?: string;
 
+  @property({
+    type: 'string',
+  })
+  mecanicoId?: string;
+
+  @property({
+    type: 'string',
+  })
+  vehiculoId?: string;
 
   constructor(data?: Partial<Revisiones>) {
     super(data);

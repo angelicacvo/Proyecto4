@@ -36,4 +36,12 @@ export class Validations {
     if (!ciudadResidencia || !ciudadResidencia.match(/^[a-z]+(\s[a-z]+){0,}/gi))
       throw new HttpErrors[400]('La ciudad ingresada no es válida');
   }
+
+
+public validarbusquedaGeneral(placa: string): void{
+  if (!placa || !placa.match(/^[A-Z]{3}[0-9]{3}$/g))
+    throw new HttpErrors[400]('Formato de placa invalido debe ')
+
+}
+
 }

@@ -1,4 +1,4 @@
-export class vehiculo {
+export class Vehiculo {
     constructor(
         public id: string | any,
         public tipoVehiculo: string,

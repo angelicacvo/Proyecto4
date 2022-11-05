@@ -1,5 +1,5 @@
 import { repository } from '@loopback/repository';
-import { getModelSchemaRef, HttpErrors, post, requestBody, response } from '@loopback/rest';
+import { get, getModelSchemaRef, HttpErrors, param, post, requestBody, response } from '@loopback/rest';
 import { Usuarios } from './../models/usuarios.model';
 import { Vehiculos } from './../models/vehiculos.model';
 import { SedesRepository } from './../repositories/sedes.repository';
@@ -98,5 +98,12 @@ export class JefeController {
         if (!propietario) throw new HttpErrors[400]('El dueño de este vehiculo no está registrado');
 
         return this.VehiculosRepository.create(vehiculo);
+    }
+
+    /**El jefe de operaciones consulta los datos detallados de un vehiculo */
+    @get('/jefe/busqueda-vehiculo/{placa}')
+    async busquedaDetallada(@param.path.string('placa') placa: typeof Vehiculos.prototype.placa) {
+        this.validations.validarBusquedaDetallada(placa);
+        return this.VehiculosRepository.findOne({ where: { placa: placa } });
     }
 }

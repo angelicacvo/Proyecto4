@@ -46,4 +46,9 @@ export class Validations {
         if (!descripcion || descripcion.length < 5)
             throw new HttpErrors[400]('Necesitamos una descripcion del vehiculo de minimo 5 caracteres');
     }
+
+    public validarBusquedaDetallada(placa: string): void {
+        if (!placa || !placa.match(/^[A-Z]{3}[0-9]{3}$/g))
+            throw new HttpErrors[400]('Formato de placa invalido debe cumplir con el formato MAYUZCULAS Y 3 numeros');
+    }
 }

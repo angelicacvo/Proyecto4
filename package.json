@@ -1,7 +1,7 @@
 {
   "name": "autostec-backend",
   "version": "0.0.1",
-  "description": "Proyecto final del programa Mision TIC 2022 para el ciclo 4 - Desarrollo de Aplicaciones Web",
+  "description": "Proyecto ciclo cuatro universidad de caldas",
   "keywords": [
     "loopback-application",
     "loopback"
@@ -33,6 +33,7 @@
     "openapi-spec": "node ./dist/openapi-spec",
     "prestart": "npm run rebuild",
     "start": "node -r source-map-support/register .",
+    "start:watch": "tsc-watch --target es2017 --outDir ./dist --onSuccess \"node .\"",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
     "rebuild": "npm run clean && npm run build"
   },
@@ -49,13 +50,17 @@
     "!*/__tests__"
   ],
   "dependencies": {
+    "@loopback/authentication": "^9.0.4",
     "@loopback/boot": "^5.0.4",
     "@loopback/core": "^4.0.4",
     "@loopback/repository": "^5.0.4",
     "@loopback/rest": "^12.0.4",
     "@loopback/rest-explorer": "^5.0.4",
+    "@loopback/security": "^0.8.4",
     "@loopback/service-proxy": "^5.0.4",
+    "jose": "^4.11.0",
     "loopback-connector-mongodb": "^5.6.0",
+    "parse-bearer-token": "^1.0.1",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
@@ -65,6 +70,7 @@
     "@types/node": "^14.18.32",
     "eslint": "^8.25.0",
     "source-map-support": "^0.5.21",
+    "tsc-watch": "^5.0.3",
     "typescript": "~4.8.4"
   }
 }

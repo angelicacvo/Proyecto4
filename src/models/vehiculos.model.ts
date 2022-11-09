@@ -1,4 +1,5 @@
-import {Entity, model, property, hasMany} from '@loopback/repository';
+import {Entity, model, property, belongsTo, hasMany} from '@loopback/repository';
+import {Usuarios} from './usuarios.model';
 import {Revisiones} from './revisiones.model';
 
 @model()
@@ -6,68 +7,66 @@ export class Vehiculos extends Entity {
   @property({
     type: 'string',
     id: true,
-    generated: true,
+    generated: true
   })
   id?: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   placa: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   tipoVehiculo: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   marca: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   anio: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   modelo: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   capacidadPasajeros: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   cilindraje: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   paisOrigen: string;
 
   @property({
     type: 'string',
-    required: true,
+    required: true
   })
   descripcion: string;
 
-  @property({
-    type: 'string',
-  })
-  usuarioId?: string;
+  @belongsTo(() => Usuarios)
+  usuarioId: string;
 
   @hasMany(() => Revisiones, {keyTo: 'vehiculoId'})
   revisiones: Revisiones[];

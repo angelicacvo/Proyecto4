@@ -1,6 +1,7 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
-import {Revisiones} from './revisiones.model';
+import {Entity, model, property, belongsTo, hasMany} from '@loopback/repository';
+import {Sedes} from './sedes.model';
 import {Vehiculos} from './vehiculos.model';
+import {Revisiones} from './revisiones.model';
 
 @model()
 export class Usuarios extends Entity {
@@ -15,13 +16,13 @@ export class Usuarios extends Entity {
     type: 'string',
     required: true,
   })
-  nombres: string;
+  cedula: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  cedula: string;
+  nombres: string;
 
   @property({
     type: 'string',
@@ -43,11 +44,6 @@ export class Usuarios extends Entity {
 
   @property({
     type: 'string',
-  })
-  direccion?: string;
-
-  @property({
-    type: 'string',
     required: true,
   })
   correo: string;
@@ -60,9 +56,9 @@ export class Usuarios extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    default: 'cliente',
   })
-  rol: string;
+  rol?: string;
 
   @property({
     type: 'string',
@@ -72,18 +68,21 @@ export class Usuarios extends Entity {
   @property({
     type: 'string',
   })
+  direccion?: string;
+
+  @property({
+    type: 'string',
+  })
   ciudadResidencia?: string;
+
+  @belongsTo(() => Sedes)
+  sedeId: string;
 
   @hasMany(() => Vehiculos, {keyTo: 'usuarioId'})
   vehiculos: Vehiculos[];
 
   @hasMany(() => Revisiones, {keyTo: 'mecanicoId'})
   revisiones: Revisiones[];
-
-  @property({
-    type: 'string',
-  })
-  sedeId?: string;
 
   constructor(data?: Partial<Usuarios>) {
     super(data);
@@ -94,4 +93,4 @@ export interface UsuariosRelations {
   // describe navigational properties here
 }
 
-export type UsuarioWithRelations = Usuarios & UsuariosRelations;
+export type UsuariosWithRelations = Usuarios & UsuariosRelations;

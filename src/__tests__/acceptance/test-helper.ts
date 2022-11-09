@@ -1,4 +1,4 @@
-import {AutostecApplication} from '../..';
+import {App} from '../..';
 import {
   createRestAppClient,
   givenHttpServerConfig,
@@ -14,7 +14,7 @@ export async function setupApplication(): Promise<AppWithClient> {
     // port: +process.env.PORT,
   });
 
-  const app = new AutostecApplication({
+  const app = new App({
     rest: restConfig,
   });
 
@@ -27,6 +27,6 @@ export async function setupApplication(): Promise<AppWithClient> {
 }
 
 export interface AppWithClient {
-  app: AutostecApplication;
+  app: App;
   client: Client;
 }

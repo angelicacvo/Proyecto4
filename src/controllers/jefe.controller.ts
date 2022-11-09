@@ -1,166 +1,247 @@
-import { repository } from '@loopback/repository';
-import { get, getModelSchemaRef, HttpErrors, param, post, requestBody, response } from '@loopback/rest';
-import { Usuarios } from './../models/usuarios.model';
-import { Vehiculos } from './../models/vehiculos.model';
-import { SedesRepository } from './../repositories/sedes.repository';
-import { UsuariosRepository } from './../repositories/usuarios.repository';
-import { VehiculosRepository } from './../repositories/vehiculos.repository';
-import { Validations } from './../services/validations.service';
-
-interface infoVehiculoGeneral {
-    tipoVehiculo: string | any;
-    marca: string | any;
-    descripcion: string | any;
-}
+import {Count, CountSchema, Filter, FilterExcludingWhere, repository, Where} from '@loopback/repository';
+import {del, get, getModelSchemaRef, getWhereSchemaFor, HttpErrors, param, patch, post, put, requestBody, response} from '@loopback/rest';
+import {Usuarios, Vehiculos} from '../models';
+import {SedesRepository, UsuariosRepository, VehiculosRepository} from '../repositories';
+import {SedesServices, UsuariosServices, VehiculosServices} from '../services';
 
 export class JefeController {
-    protected validations: Validations;
+  protected userServices: UsuariosServices;
+  protected sedeServices: SedesServices;
+  protected vehiculoServices: VehiculosServices;
 
-    constructor(
-        @repository(UsuariosRepository)
-        public UsuariosRepository: UsuariosRepository,
-        @repository(VehiculosRepository)
-        public VehiculosRepository: VehiculosRepository,
-        @repository(SedesRepository)
-        public SedesRepository: SedesRepository,
-    ) {
-        this.validations = new Validations();
-    }
+  constructor(
+    @repository(UsuariosRepository)
+    public usuariosRepository: UsuariosRepository,
+    @repository(SedesRepository)
+    public sedesRepository: SedesRepository,
+    @repository(VehiculosRepository)
+    public vehiculosRepository: VehiculosRepository
+  ) {
+    this.userServices = new UsuariosServices(usuariosRepository);
+    this.sedeServices = new SedesServices(sedesRepository);
+  }
 
-    /** El jefe de opreacciones agregra un usuario */
-    @post('/jefe/registrar-usuario')
-    @response(200, {
-        description: 'Agregar Propietario de un vehiculo es decir un cliente',
-        content: {
-            'application/json': {
-                schema: getModelSchemaRef(Usuarios, {
-                    exclude: ['sedeId', 'contraseina', 'nivelEstudios', 'direccion', 'revisiones', 'vehiculos'],
-                }),
-            },
-        },
+  @post('/jefe/crear/usuarios')
+  @response(200, {
+    description: 'Usuarios model instance',
+    content: {'application/json': {schema: getModelSchemaRef(Usuarios)}}
+  })
+  async create(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Usuarios, {
+            title: 'NewUsuarios',
+            exclude: ['id'],
+            optional: ['rol']
+          })
+        }
+      }
     })
-    async registrarCliente(
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(Usuarios, {
-                        title: 'CrearCliente',
-                        exclude: ['id', 'nivelEstudios', 'direccion', 'rol'],
-                    }),
-                },
-            },
-        })
-        usuario: Usuarios,
-    ): Promise<Usuarios> {
-        // Verificar que el usuario no exista
-        const user = await this.UsuariosRepository.findOne({
-            where: { correo: usuario.correo, cedula: usuario.cedula },
-        });
-        if (user) throw new HttpErrors[400]('El usuario que intentas registrar ya existe');
+    usuarios: Omit<Usuarios, 'id'>
+  ): Promise<Usuarios> {
+    this.userServices.validarCamposUsuario(usuarios);
+    await this.sedeServices.validarExistenciaSede(usuarios.sedeId);
+    await this.userServices.validarInexistenciaUsuario(usuarios.correo, usuarios.cedula);
+    return this.usuariosRepository.create(usuarios);
+  }
 
-        // verificar que la sede exista
-        const sede = await this.SedesRepository.findOne({ where: { id: usuario.sedeId } });
-        if (!sede) throw new HttpErrors[400]('La sede a la que pertenece el usuario no existe');
+  @get('/jefe/count')
+  @response(200, {
+    description: 'Usuarios model count',
+    content: {'application/json': {schema: CountSchema}}
+  })
+  async count(@param.where(Usuarios) where?: Where<Usuarios>): Promise<Count> {
+    return this.usuariosRepository.count(where, {rol: 'jefe'});
+  }
 
-        // validar campos del usuario
-        this.validations.validarCamposCliente(usuario);
-        return this.UsuariosRepository.create(usuario);
+  @get('/jefe')
+  @response(200, {
+    description: 'Array of Usuarios model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Usuarios, {includeRelations: true})
+        }
+      }
     }
+  })
+  async find(@param.filter(Usuarios) filter?: Filter<Usuarios>): Promise<Usuarios[]> {
+    return this.usuariosRepository.find(filter);
+  }
 
-    /** Registra un nuevo vehiculo */
-    @post('/jefe/agregar-vehiculo')
-    @response(200, {
-        description: 'Registra un vehiculo',
-        content: {
-            'application/json': {
-                schema: getModelSchemaRef(Vehiculos, {
-                    exclude: ['revisiones'],
-                }),
-            },
-        },
+  @patch('/jefe')
+  @response(200, {
+    description: 'Usuarios PATCH success count',
+    content: {'application/json': {schema: CountSchema}}
+  })
+  async updateAll(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Usuarios, {partial: true, exclude: ['cedula', 'correo', 'contraseina', 'rol']})
+        }
+      }
     })
-    async registarVehiculo(
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(Vehiculos, {
-                        title: 'CrearVehiculo',
-                        exclude: ['id'],
-                    }),
-                },
-            },
-        })
-        vehiculo: Vehiculos,
-    ): Promise<Vehiculos> {
-        // validar campos del vehiculo
-        this.validations.validarCamposVehiculo(vehiculo);
+    usuarios: Usuarios,
+    @param.where(Usuarios) where?: Where<Usuarios>
+  ): Promise<Count> {
+    this.userServices.protegerCredenciales(usuarios);
+    return this.usuariosRepository.updateAll(usuarios, where);
+  }
 
-        // verificar que e vehiculo no esista
-        const carro = await this.VehiculosRepository.findOne({ where: { placa: vehiculo.placa } });
-        if (carro) throw new HttpErrors[400]('El vehiculo ya existe');
-
-        // Verificar que el usuario deño del vehiculo exista
-        const propietario = await this.UsuariosRepository.findOne({ where: { id: vehiculo.usuarioId } });
-        if (!propietario) throw new HttpErrors[400]('El dueño de este vehiculo no está registrado');
-
-        return this.VehiculosRepository.create(vehiculo);
+  @get('/jefe/{id}')
+  @response(200, {
+    description: 'Usuarios model instance',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(Usuarios, {includeRelations: true})
+      }
     }
-
-    /**El jefe de operaciones consulta los datos detallados de un vehiculo */
-    @get('/jefe/busqueda-vehiculo/{placa}')
-    async busquedaDetallada(@param.path.string('placa') placa: typeof Vehiculos.prototype.placa) {
-        this.validations.validarBusquedaDetallada(placa);
-        return this.VehiculosRepository.findOne({ where: { placa: placa } });
+  })
+  async findById(
+    @param.path.string('id') id: string,
+    @param.filter(Usuarios, {exclude: 'where'}) filter?: FilterExcludingWhere<Usuarios>
+  ): Promise<Usuarios> {
+    try {
+      return this.usuariosRepository.findById(id, filter);
+    } catch (error) {
+      throw new HttpErrors[400]('El susuario no existe');
     }
+  }
 
-    /**El jefe de operaciones consulta los datos detallados de un vehiculo */
-    @get('/jefe/busquedaGeneralVehiculo/{placa}')
-    async busquedaGeneral(@param.path.string('placa') placa: string) {
-        this.validations.validarbusquedaGeneral(placa);
-        const veh = await this.VehiculosRepository.findOne({ where: { placa: placa } });
-        if (!veh) throw new HttpErrors[400]('Vehiculo no existe');
-        const data: infoVehiculoGeneral = {
-            tipoVehiculo: veh?.tipoVehiculo,
-            marca: veh?.marca,
-            descripcion: veh?.descripcion,
-        };
-        return data;
-    }
-
-    /** El jefe de opreacciones agregra un mecanico */
-    @post('/jefe/agregar-mecanico')
-    @response(200, {
-        description: 'Agregar mecanico',
-        content: {
-            'application/json': {
-                schema: getModelSchemaRef(Usuarios, { exclude: ['sedeId', 'contraseina', 'direccion'] }),
-            },
-        },
+  @patch('/jefe/{id}')
+  @response(204, {
+    description: 'Usuarios PATCH success'
+  })
+  async updateById(
+    @param.path.string('id') id: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Usuarios, {
+            partial: true,
+            exclude: ['id', 'cedula', 'correo', 'contraseina', 'rol', 'sedeId', 'nivelEstudios']
+          })
+        }
+      }
     })
-    async crearMecanico(
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(Usuarios, {
-                        title: 'CrearMecanico',
-                        exclude: ['id', 'rol', 'ciudadResidencia'],
-                    }),
-                },
-            },
-        })
-        mec: Usuarios,
-    ): Promise<Usuarios> {
-        // Verificar que el usuario no exista
-        const user = await this.UsuariosRepository.findOne({ where: { correo: mec.correo, cedula: mec.cedula } });
-        if (user) throw new HttpErrors[400]('El usuario que eintentas registrar ya existe');
-
-        // validar campos del usuario
-        this.validations.validarCamposCliente(mec);
-
-        //Insancia mecanico
-        //this.mecanicoEntidad = new Mecanico('', mec.nombres, mec.apellidos, mec.cedula, mec.telefono, mec.fechaNacimiento, mec.correo, mec.contraseina, mec.nivelEstudios, mec.direccion)
-        const datos = { ...mec, rol: 'mecanico' };
-
-        return this.UsuariosRepository.create(datos);
+    usuarios: Usuarios
+  ): Promise<void> {
+    await this.userServices.validateUpdateSecure(id, usuarios);
+    try {
+      await this.usuariosRepository.updateById(id, {...usuarios, rol: 'jefe'});
+    } catch (error) {
+      throw new HttpErrors[400]('El susuario no existe');
     }
+  }
+
+  @put('/jefe/{id}')
+  @response(204, {
+    description: 'Usuarios PUT success'
+  })
+  async replaceById(@param.path.string('id') id: string, @requestBody() usuarios: Omit<Usuarios, 'id'>): Promise<void> {
+    this.userServices.validarCamposUsuario(usuarios);
+    await this.userServices.validateUpdateSecure(id, usuarios);
+    await this.usuariosRepository.replaceById(id, {...usuarios, rol: 'jefe'});
+  }
+
+  @del('/jefe/{id}')
+  @response(204, {
+    description: 'Usuarios DELETE success'
+  })
+  async deleteById(@param.path.string('id') id: string): Promise<void> {
+    const user = await this.usuariosRepository.findOne({where: {id: id}});
+    if (user && user.rol == 'cliente') {
+      await this.usuariosRepository.deleteById(id);
+    } else if (!user) {
+      throw new HttpErrors[400]('El susuario no existe');
+    } else {
+      throw new HttpErrors[400]('Usted no puede eliminar esta cuenta');
+    }
+  }
+
+  @get('/jefe/{id}/vehiculos', {
+    responses: {
+      '200': {
+        description: 'Array of Usuarios has many Vehiculos',
+        content: {
+          'application/json': {
+            schema: {type: 'array', items: getModelSchemaRef(Vehiculos)}
+          }
+        }
+      }
+    }
+  })
+  async findUserVehiculos(@param.path.string('id') id: string, @param.query.object('filter') filter?: Filter<Vehiculos>): Promise<Vehiculos[]> {
+    return this.usuariosRepository.vehiculos(id).find(filter);
+  }
+
+  @post('/jefe/{id}/vehiculos', {
+    responses: {
+      '200': {
+        description: 'Usuarios model instance',
+        content: {'application/json': {schema: getModelSchemaRef(Vehiculos)}}
+      }
+    }
+  })
+  async createUserVehiculo(
+    @param.path.string('id') id: typeof Usuarios.prototype.id,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Vehiculos, {
+            title: 'NewVehiculosInUsuarios',
+            exclude: ['id'],
+            optional: ['usuarioId']
+          })
+        }
+      }
+    })
+    vehiculos: Omit<Vehiculos, 'id'>
+  ): Promise<Vehiculos> {
+    this.vehiculoServices.validarCamposVehiculo(vehiculos);
+    await this.vehiculoServices.validarExistenciaVehiculo(vehiculos.placa, true);
+    return this.usuariosRepository.vehiculos(id).create(vehiculos);
+  }
+
+  @patch('/jefe/usuario/{id}/vehiculos', {
+    responses: {
+      '200': {
+        description: 'Usuarios.Vehiculos PATCH success count',
+        content: {'application/json': {schema: CountSchema}}
+      }
+    }
+  })
+  async patchUserVehiculos(
+    @param.path.string('id') id: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Vehiculos, {partial: true, exclude: ['id', 'usuarioId']})
+        }
+      }
+    })
+    vehiculos: Partial<Vehiculos>,
+    @param.query.object('where', getWhereSchemaFor(Vehiculos)) where?: Where<Vehiculos>
+  ): Promise<Count> {
+    if (vehiculos.placa) throw new HttpErrors[400]('No puedes cambiar las placas de todos vehiculos por un solo valor');
+    return this.usuariosRepository.vehiculos(id).patch(vehiculos, where);
+  }
+
+  @del('/jefe/usuario/{id}/vehiculos', {
+    responses: {
+      '200': {
+        description: 'Usuarios.Vehiculos DELETE success count',
+        content: {'application/json': {schema: CountSchema}}
+      }
+    }
+  })
+  async deleteUserVehiculos(
+    @param.path.string('id') id: string,
+    @param.query.object('where', getWhereSchemaFor(Vehiculos)) where?: Where<Vehiculos>
+  ): Promise<Count> {
+    return this.usuariosRepository.vehiculos(id).delete(where);
+  }
 }

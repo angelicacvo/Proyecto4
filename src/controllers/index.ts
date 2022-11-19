@@ -4,3 +4,4 @@ export * from './ping.controller';
 export * from './revisiones.controller';
 export * from './sedes.controller';
 export * from './vehiculos.controller';
+export * from './login.controller';

@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {Count, CountSchema, Filter, FilterExcludingWhere, repository, Where} from '@loopback/repository';
 import {del, get, getModelSchemaRef, getWhereSchemaFor, HttpErrors, param, patch, post, put, requestBody, response} from '@loopback/rest';
 import {Usuarios, Vehiculos} from '../models';
@@ -20,6 +21,7 @@ export class JefeController {
     this.userServices = new UsuariosServices(usuariosRepository);
     this.sedeServices = new SedesServices(sedesRepository);
   }
+
 
   @post('/jefe/crear/usuarios')
   @response(200, {
@@ -54,7 +56,7 @@ export class JefeController {
   async count(@param.where(Usuarios) where?: Where<Usuarios>): Promise<Count> {
     return this.usuariosRepository.count(where, {rol: 'jefe'});
   }
-
+ 
   @get('/jefe')
   @response(200, {
     description: 'Array of Usuarios model instances',

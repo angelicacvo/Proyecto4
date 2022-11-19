@@ -7,3 +7,4 @@ export * from './vehiculos.controller';
 export * from './login.controller';
 export * from './repuestos-vehiculos.controller';
 export * from './repuestos.controller';
+export * from './usuarios.controller';

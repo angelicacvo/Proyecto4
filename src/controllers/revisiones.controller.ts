@@ -36,7 +36,7 @@ export class RevisionesController {
     })
     revisiones: Omit<Revisiones, 'id'>
   ): Promise<Revisiones> {
-    await this.vehiculosService.validarExistenciaVehiculo(revisiones.vehiculoId, false, true);
+    await this.vehiculosService.validarExistenciaVehiculo(revisiones.vehiculoId, true, true);
     return this.revisionesRepository.create(revisiones);
   }
 

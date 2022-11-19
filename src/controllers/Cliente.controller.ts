@@ -122,14 +122,14 @@ export class ClienteController {
         'application/json': {
           schema: getModelSchemaRef(Usuarios, {
             partial: true,
-            exclude: ['id', 'cedula', 'correo', 'contraseina', 'rol', 'sedeId', 'nivelEstudios']
+            exclude: ['id', 'rol', 'sedeId', 'nivelEstudios']
           })
         }
       }
     })
     usuarios: Usuarios
   ): Promise<void> {
-    await this.userServices.validateUpdateSecure(id, usuarios);
+    // await this.userServices.validateUpdateSecure(id, usuarios);
     try {
       await this.usuariosRepository.updateById(id, {...usuarios, rol: 'cliente'});
     } catch (error) {
